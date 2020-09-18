@@ -1,19 +1,46 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
+type Article struct {
+	Title   string `json:"Title"`
+	Desc    string `json:"desc"`
+	Content string `json:"content"`
+}
+
+var Articles []Article
+
+func allArticles(w http.ResponseWriter, r *http.Request) {
+	Articles = []Article{
+		Article{Title: "Test Title", Desc: "Test Description", Content: "Hello World"},
+	}
+
+	fmt.Println("Endpoint Hit: All Articles Endpoint")
+	json.NewEncoder(w).Encode(Articles)
+}
+
+func testPostArticles(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Test POST endpoint worked")
+}
+
 func homePage(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Welcome to the Homepage!")
-	fmt.Println("EndPoint Hit: homePage")
+	fmt.Fprintf(w, "Homepage Endpoint Hit!")
 }
 
 func handleRequests() {
-	http.HandleFunc("/", homePage)
-	log.Fatal(http.ListenAndServe(":10000", nil))
+
+	myRouter := mux.NewRouter().StrictSlash(true)
+	myRouter.HandleFunc("/", homePage)
+	myRouter.HandleFunc("/articles", allArticles).Methods("GET")
+	myRouter.HandleFunc("/articles", testPostArticles).Methods("POST")
+	log.Fatal(http.ListenAndServe(":10000", myRouter))
 }
 
 func main() {
